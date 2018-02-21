@@ -151,6 +151,9 @@ if os.path.isfile(partner_details_file_name):
             
 until = len(partners_list)
 
+resume = 0
+until =1
+
 print("Starting to search Partner details and Twitter hanldes from position-{}".format(resume+1))
 for pid in range(resume, until):
     partner_name = partners_list[pid]
@@ -272,9 +275,14 @@ for pid in range(resume, until):
         expression_attribute_values[":partner_description"] = {"S" : re.sub("\n"," ",partner_description.strip())}
         update_expression = update_expression + "#PartnerDescription = :partner_description,"      
     if num_competencies > 0:
-        for c in range(num_competencies):
+        for c in range(num_competencies):            
+            qualification_list = []
+            qualifications = qualification_values[c].split("|")
+            for qualification in qualifications:
+                qualification_list.append({"S" : qualification})
+            multivalued_attribute = {"L":qualification_list}   
             expression_attribute_names["#PartnerCompetency"+str(c)] = qualification_names[c]
-            expression_attribute_values[":partner_competency"+str(c)] = {"S" : qualification_values[c]}
+            expression_attribute_values[":partner_competency"+str(c)] = multivalued_attribute
             update_expression = update_expression + "#PartnerCompetency"+str(c)+" = :partner_competency"+str(c)+","           
     if partner_name != "" and partner_website != "":
         if len(update_expression) <= 4 :
