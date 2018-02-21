@@ -30,7 +30,7 @@ max_search_attempt = 5
 partners_file_name = "apn-partners.txt"
 partner_details_file_name = "apn-partner-details.txt"
 
-table_name = "APNPartners"
+table_name = "APNPartnerMaster"
 
 dynamodb = boto3.client('dynamodb', 'us-east-1')
 
@@ -111,7 +111,7 @@ if len(partners_list) <=0:
                 print("Page-{} Loaded.".format(int(i/pagesize)+1))
                 partner_divs = browser.find_elements_by_class_name("psf-partner-name")
                 for j in range(len(partner_divs)):
-                    partners_list.append(partner_divs[j].text)
+                    partners_list.append(partner_divs[j].text.encode('utf-8'))
                 print("{} Partner names captured from Page-{}".format(len(partner_divs), int(i/pagesize)+1))
             except TimeoutException:
                 print("Loading Page-{} took too much time, trying again in {} seconds".format(int(i/pagesize)+1, wait_time))
@@ -150,9 +150,6 @@ if os.path.isfile(partner_details_file_name):
                 pass  
             
 until = len(partners_list)
-
-resume = 0
-until =1
 
 print("Starting to search Partner details and Twitter hanldes from position-{}".format(resume+1))
 for pid in range(resume, until):
@@ -250,11 +247,11 @@ for pid in range(resume, until):
         
     partner_details_file = open(partner_details_file_name, "a")  
     partner_details_file.writelines("{}~{}~{}~{}~{}~{}~{}\n".format(pid+1,
-                                                                 partner_name, 
+                                                                 partner_name.encode('utf-8'), 
                                                                  partner_website, 
-                                                                 partner_location, 
+                                                                 partner_location.encode('utf-8'), 
                                                                  partner_type, 
-                                                                 partner_description,
+                                                                 partner_description.encode('utf-8'),
                                                                  partner_competencies))    
     partner_details_file.close()            
     
@@ -264,7 +261,7 @@ for pid in range(resume, until):
     
     if partner_location != "":
         expression_attribute_names["#PartnerLocation"] = "partner_location"
-        expression_attribute_values[":partner_location"] = {"S" : partner_location}
+        expression_attribute_values[":partner_location"] = {"S" : partner_location.encode('utf-8')}
         update_expression = update_expression + "#PartnerLocation = :partner_location,"
     if partner_type != "":
         expression_attribute_names["#PartnerType"] = "partner_type"
@@ -272,7 +269,7 @@ for pid in range(resume, until):
         update_expression = update_expression + "#PartnerType = :partner_type,"        
     if partner_description != "":
         expression_attribute_names["#PartnerDescription"] = "partner_description"
-        expression_attribute_values[":partner_description"] = {"S" : re.sub("\n"," ",partner_description.strip())}
+        expression_attribute_values[":partner_description"] = {"S" : re.sub("\n"," ",partner_description.encode('utf-8').strip())}
         update_expression = update_expression + "#PartnerDescription = :partner_description,"      
     if num_competencies > 0:
         for c in range(num_competencies):            
@@ -289,7 +286,7 @@ for pid in range(resume, until):
             dynamodb.update_item(
                 Key={
                     'partner_name': {
-                        'S': partner_name,
+                        'S': partner_name.encode('utf-8'),
                     },
                     'partner_website': {
                         'S': partner_website,
@@ -304,7 +301,7 @@ for pid in range(resume, until):
                 ExpressionAttributeValues=expression_attribute_values,
                 Key={
                     'partner_name': {
-                        'S': partner_name,
+                        'S': partner_name.encode('utf-8'),
                     },
                     'partner_website': {
                         'S': partner_website,
